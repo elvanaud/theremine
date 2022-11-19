@@ -61,6 +61,8 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, HIGH);
   int nbIter = 0;
+  Serial.begin(9600);
+  pinMode(5,OUTPUT);
   
   while(millis() < 5000)
   {
@@ -72,12 +74,32 @@ void setup() {
     if(sensorValue < sensorValue)
       {sensorLow = sensorValue;}
   }
-  averageSensor/=nbIter;
+  averageSensor/=(double)nbIter;
 
   digitalWrite(ledPin, LOW);
   
-  playMelody();
+  Serial.println("bonjour");
+  Serial.println(averageSensor);
+  printDouble(averageSensor,100);
+  Serial.println(nbIter);
+  Serial.println(sensorHigh);
+  //playMelody();
 }
+
+void printDouble( double val, unsigned int precision){
+// prints val with number of decimal places determine by precision
+// NOTE: precision is 1 followed by the number of zeros for the desired number of decimial places
+// example: printDouble( 3.1415, 100); // prints 3.14 (two decimal places)
+
+    Serial.print (int(val));  //prints the int part
+    Serial.print("."); // print the decimal point
+    unsigned int frac;
+    if(val >= 0)
+        frac = (val - int(val)) * precision;
+    else
+        frac = (int(val)- val ) * precision;
+    Serial.println(frac,DEC) ;
+} 
 
 void playMelody()
 {
@@ -96,9 +118,12 @@ void playMelody()
 
     // we only play the note for 90% of the duration, leaving 10% as a pause
     sensorValue = analogRead(A0);
-    double coeffDJ = (sensorValue - averageSensor)/(double)(sensorHigh-sensorLow);
-    //noteDuration *= coeffDJ;
-    tone(buzzer, melody[thisNote], noteDuration * 0.9);
+    double coeffDJ = (sensorValue+10)/(double)sensorHigh; //(sensorValue - averageSensor)/(double)(sensorHigh-sensorLow);
+    
+    printDouble(coeffDJ,100);
+    noteDuration *= 1+(coeffDJ/10);
+    
+    tone(buzzer, melody[thisNote]*(1+coeffDJ/10), noteDuration * 0.9);
 
     // Wait for the specief duration before playing the next note.
     delay(noteDuration);
@@ -110,10 +135,12 @@ void playMelody()
 
 void loop() {
   // put your main code here, to run repeatedly:
-  /*sensorValue = analogRead(A0);
+  sensorValue = analogRead(A0);
   
   int pitch = map(sensorValue, sensorLow, sensorHigh, 400, 600);
+  analogWrite(5,map(sensorValue,sensorLow,sensorHigh,0,255));  
   tone(8,pitch,20);
+  
 
-  delay(100);*/
+  delay(100);
 }
